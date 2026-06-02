@@ -5,7 +5,7 @@ import puppeteer from "puppeteer-core";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-const fileUrl = "file://" + path.join(ROOT, "web/dist/index.html");
+const fileUrl = "file://" + path.join(ROOT, "docs/index.html");
 
 async function main() {
   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true,

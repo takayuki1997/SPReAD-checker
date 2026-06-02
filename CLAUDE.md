@@ -1,7 +1,7 @@
 # SPReAD-checker — プロジェクトガイド
 
 第2回 SPReAD 公募（文科省 AI for Science）の**形式チェックツールを、Python不要・ブラウザだけ**で
-使えるようにするプロジェクト。配布物は単一HTML（`web/dist/index.html`）。
+使えるようにするプロジェクト。配布物は単一HTML（`docs/index.html`）。
 
 - GitHub（Public）: https://github.com/takayuki1997/SPReAD-checker
 - ローカル作業ディレクトリ: `/Users/takayuki/Projects/SPReAD_CheckTool`
@@ -36,14 +36,14 @@
 - `samples/`（公式様式・そこから生成したPDF）
 - `baseline*/`（検証出力）、`.venv/`、`node_modules/`
 - 安全策として `*.xlsx *.xlsm *.pdf *.docx` も無視
-- ビルド時は **同梱なし(既定)** を使うこと（`web/dist/index.html` に .py が混入しないこと。`PY_SCRIPTS = {}` を確認）
+- ビルド時は **同梱なし(既定)** を使うこと（`docs/index.html` に .py が混入しないこと。`PY_SCRIPTS = {}` を確認）
 
 ## ディレクトリ構成
 
 ```
 web/app/index.template.html  UI本体（CSS/JS）。/*__PY_SCRIPTS__*/{} に同梱版を注入可
 web/build.mjs                ビルド: 既定=同梱なし / --embed で vendor/*.py 埋め込み
-web/dist/index.html          ★配布物（自己完結HTML・既定はUIのみ約23KB）
+docs/index.html              ★配布物の正本（自己完結HTML・Pages公開元・約23KB）
 web/test_pyodide*.mjs        Node版Pyodideでの疎通確認（Excel/PDF）
 web/test_runtime_load.mjs    実行時 .py 読み込み方式の確認
 web/test_cache.mjs           localStorageキャッシュの復元・自動失効検証
@@ -60,13 +60,13 @@ vendor/ samples/ baseline*/  ローカル検証用（gitignore対象）
 python3 -m venv .venv && .venv/bin/pip install openpyxl pdfminer.six pypdf reportlab
 npm install                      # pyodide, puppeteer-core
 
-node web/build.mjs               # 配布物生成（同梱なし）-> web/dist/index.html
+node web/build.mjs               # 配布物生成（同梱なし）-> docs/index.html
 node web/test_pyodide.mjs        # 様式1がPyodideで動くか
 node web/test_pyodide_pdf.mjs    # PDFがPyodideで動くか
 node web/test_cache.mjs          # キャッシュ復元・40日自動失効
 node web/e2e_test.mjs            # 実ブラウザ(Chrome)E2E（http）
 node web/verify_fileurl.mjs      # 実ブラウザ(file://) + スクショ
-open web/dist/index.html         # 手動確認
+open docs/index.html             # 手動確認
 ```
 
 - E2E/検証は システムChrome を puppeteer-core で使用

@@ -8,7 +8,8 @@ import path from "node:path";
 const ROOT = path.resolve(import.meta.dirname, "..");
 const VENDOR = path.join(ROOT, "vendor");
 const TEMPLATE = path.join(ROOT, "web/app/index.template.html");
-const OUT_DIR = path.join(ROOT, "web/dist");
+// 配布物の正本＝ docs/index.html（GitHub Pages の公開元も docs）
+const OUT_DIR = path.join(ROOT, "docs");
 
 const embed = process.argv.includes("--embed");
 const SCRIPTS = ["research_plan_self_check.py", "form_self_check.py"];
@@ -28,6 +29,6 @@ const outFile = path.join(OUT_DIR, "index.html");
 fs.writeFileSync(outFile, html);
 
 const kb = (Buffer.byteLength(html) / 1024).toFixed(0);
-console.log(`生成: ${outFile} (${kb} KB)`);
+console.log(`生成: ${outFile} (${kb} KB)  ← 配布物の正本 / GitHub Pages 公開元`);
 console.log(embed ? `モード: 同梱あり (${SCRIPTS.join(", ")})`
                   : "モード: 同梱なし（利用者が .py を実行時に読み込む）");

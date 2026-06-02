@@ -20,7 +20,7 @@
 
 ## 配布物
 
-ビルドすると `web/dist/index.html`（自己完結の単一ファイル）が生成されます。配り方は2通り:
+ビルドすると `docs/index.html`（自己完結の単一ファイル）が生成されます。これが配布物の正本で、GitHub Pages の公開元でもあります。配り方は2通り:
 
 - **B-1: URLで配る** … `index.html` を社内サーバや静的ホスティングに置き、URLを共有。更新が一括で楽。
 - **B-2: HTMLファイルを配る** … `index.html` をそのまま配布（メール添付・共有フォルダ）。ダブルクリックで開く。
@@ -45,7 +45,7 @@ python3 -m venv .venv && .venv/bin/pip install openpyxl pdfminer.six pypdf
 npm install            # pyodide, puppeteer-core
 
 # ビルド（既定: ツール同梱なし。利用者が .py を実行時に読み込む）
-node web/build.mjs           # -> web/dist/index.html（約20KB・UIのみ）
+node web/build.mjs           # -> docs/index.html（約23KB・UIのみ）
 
 # （任意）自機関内で同梱したい場合のみ。再配布に当たり得る点に留意。
 node web/build.mjs --embed   # vendor/*.py を埋め込む（約148KB）
@@ -63,7 +63,7 @@ node web/build.mjs --embed   # vendor/*.py を埋め込む（約148KB）
 vendor/                配布版オリジナル.py（無改変）。ビルドの入力
 web/app/index.template.html   UI本体（CSS/JS）。__PY_SCRIPTS__ に.pyを埋め込む
 web/build.mjs          ビルド: テンプレ + vendor/*.py -> dist/index.html
-web/dist/index.html    ★配布物（自己完結の単一HTML）
+docs/index.html        ★配布物の正本（自己完結HTML・GitHub Pages 公開元）
 web/test_pyodide*.mjs  疎通確認(Node版Pyodide): Excel/PDF が動くか
 web/e2e_test.mjs       実ブラウザE2E(http配信, B-1)
 web/verify_fileurl.mjs 実ブラウザ検証(file://, B-2) + スクショ

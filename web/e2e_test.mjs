@@ -5,7 +5,7 @@ import path from "node:path";
 import puppeteer from "puppeteer-core";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
-const DIST = path.join(ROOT, "web/dist");
+const DIST = path.join(ROOT, "docs");
 const CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".mjs": "text/javascript" };
