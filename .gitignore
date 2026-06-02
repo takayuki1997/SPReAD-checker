@@ -1,0 +1,21 @@
+# --- 文科省ツール／公式様式は再配布禁止のため公開しない ---
+vendor/
+samples/
+baseline/
+baseline_native_single/
+baseline_pyodide/
+
+# 念のため書類・様式の実体は一切コミットしない（安全策）
+*.xlsx
+*.xlsm
+*.pdf
+*.docx
+# ただし vendor の .py は vendor/ ごと無視済み（当方コードの .py は対象外）
+
+# --- 環境・生成物 ---
+.venv/
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+package-lock.json

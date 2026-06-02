@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SPReAD 応募書類 形式チェック（ブラウザ版）</title>
+<style>
+  :root { --ok:#1a7f37; --ng:#c4320a; --warn:#9a6700; --line:#d0d7de; --bg:#f6f8fa; --ink:#1f2328; --accent:#0969da; }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, sans-serif;
+         color: var(--ink); margin: 0; background: #fff; line-height: 1.6; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 24px 20px 80px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: #57606a; font-size: 13px; margin-bottom: 20px; }
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 18px; background: #fff; }
+  .step { font-size: 15px; font-weight: 700; margin: 0 0 10px; }
+  .step .n { display:inline-block; background: var(--accent); color:#fff; width:22px; height:22px; border-radius:50%;
+             text-align:center; line-height:22px; font-size:13px; margin-right:8px; }
+  .privacy { background: #ddf4ff; border-color: #add4ff; font-size: 13.5px; }
+  .privacy b { color: var(--accent); }
+  .note { font-size: 12.5px; color: #57606a; margin: 8px 0 0; }
+  .note a { color: var(--accent); }
+  .drop { border: 2px dashed var(--line); border-radius: 10px; padding: 22px; text-align: center;
+          background: var(--bg); cursor: pointer; transition: .15s; }
+  .drop.drag { border-color: var(--accent); background: #eaf4ff; }
+  .drop p { margin: 4px 0; }
+  .hint { color: #57606a; font-size: 12.5px; }
+  .files { list-style: none; padding: 0; margin: 12px 0 0; }
+  .files li { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border: 1px solid var(--line);
+              border-radius: 6px; margin-bottom: 6px; font-size: 13.5px; background: #fff; }
+  .files .tag { font-size: 11px; padding: 1px 7px; border-radius: 10px; color: #fff; white-space: nowrap; }
+  .tag.xlsx { background: #1a7f37; } .tag.pdf { background: #c4320a; } .tag.bad { background: #6e7781; }
+  .tag.tool { background: #0969da; }
+  .files .rm { margin-left: auto; border: none; background: none; color: #c4320a; cursor: pointer; font-size: 16px; }
+  .toolstate { font-size: 13px; margin-top: 10px; }
+  .toolstate span { display:inline-block; margin-right: 14px; }
+  .chk { color: var(--ok); font-weight: 700; } .miss { color: #6e7781; }
+  button.run { background: var(--accent); color: #fff; border: none; padding: 11px 22px; border-radius: 7px;
+               font-size: 15px; cursor: pointer; margin-top: 4px; }
+  button.run:disabled { background: #94a3b8; cursor: default; }
+  .status { margin-top: 14px; font-size: 13.5px; white-space: pre-wrap; color: #57606a; min-height: 20px; }
+  .spinner { display:inline-block; width:13px; height:13px; border:2px solid #c8d1da; border-top-color: var(--accent);
+             border-radius:50%; animation: spin 0.8s linear infinite; vertical-align:-2px; margin-right:6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .result { margin-top: 8px; }
+  .result h2 { font-size: 17px; border-bottom: 2px solid var(--line); padding-bottom: 6px; margin: 26px 0 12px; }
+  .warnbox { background:#fff8c5; border:1px solid #eac54f; border-radius:8px; padding:10px 12px; font-size:13px; margin:10px 0; }
+  .filehead { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin: 16px 0 6px; }
+  .filehead .name { font-weight: 600; }
+  .badge { font-size: 12.5px; font-weight: 700; padding: 2px 12px; border-radius: 12px; }
+  .badge.ok { background: #dafbe1; color: var(--ok); }
+  .badge.ng { background: #ffebe9; color: var(--ng); }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; margin: 8px 0 4px; }
+  th, td { border: 1px solid var(--line); padding: 5px 8px; text-align: left; vertical-align: top; }
+  th { background: var(--bg); position: sticky; top: 0; }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+  td.s-ok { color: var(--ok); font-weight: 600; }
+  td.s-ng { color: var(--ng); font-weight: 700; background: #fff5f3; }
+  td.s-warn { color: var(--warn); font-weight: 600; }
+  .dl { display:inline-block; margin: 10px 0 0; background:#1f883d; color:#fff; text-decoration:none;
+        padding: 8px 16px; border-radius: 6px; font-size: 13.5px; }
+  details.det { margin-top: 6px; }
+  details.det summary { cursor: pointer; font-size: 13px; color: var(--accent); }
+  .err { color: var(--ng); font-weight: 600; }
+  footer { color: #6e7781; font-size: 12px; margin-top: 40px; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SPReAD 応募書類 形式チェック（ブラウザ版）</h1>
+  <div class="sub">第2回 SPReAD 公募 — 様式1（Excel）／様式0・2・3・4（PDF）の形式セルフチェック</div>
+
+  <div class="card privacy">
+    🔒 <b>ツール(.py)も書類も、このパソコンの外に送信されません。</b>
+    すべてブラウザ内で実行されます（インターネット接続は、最初に計算エンジンを読み込むためだけに使われます）。
+  </div>
+
+  <!-- ① ツール(.py)の読み込み -->
+  <div class="card">
+    <p class="step"><span class="n">1</span>形式チェックツール（.py）を読み込む</p>
+    <div id="dropTool" class="drop">
+      <p>🐍 文科省配布の <b>.py</b> ファイルをドラッグ＆ドロップ（クリックで選択）</p>
+      <p class="hint">research_plan_self_check（様式1用）／ form_self_check（様式0・2・3・4用）</p>
+      <input id="fileTool" type="file" accept=".py" multiple hidden>
+    </div>
+    <div class="toolstate">
+      <span id="stForm1" class="miss">○ 様式1用ツール：未読み込み</span>
+      <span id="stForms" class="miss">○ 様式0・2・3・4用ツール：未読み込み</span>
+    </div>
+    <div id="toolCache" class="note"></div>
+    <p class="note">
+      ⚠️ このページには文科省のツールは含まれていません。<b>必ず公式配布元から入手した .py</b> をご自身で読み込んでください。<br>
+      公式配布元（Box「形式チェックツール関連」）：
+      <a href="https://mext.ent.box.com/s/qf8vbuj3pso1hj9mwp1vs6rx2hashpuc/folder/385379226260" target="_blank" rel="noopener">こちらからダウンロード</a>
+      <span style="color:#8b949e;">（リンク切れ時は文科省公式ページ
+        <a href="https://www.mext.go.jp/aifors_spread/" target="_blank" rel="noopener">aifors_spread</a> 経由でも入手可）</span>
+    </p>
+  </div>
+
+  <!-- ② 書類の読み込み -->
+  <div class="card">
+    <p class="step"><span class="n">2</span>確認する書類を読み込む</p>
+    <div id="drop" class="drop">
+      <p>📄 様式1（.xlsx）／ 様式0・2・3・4（.pdf）をドラッグ＆ドロップ（複数可）</p>
+      <p class="hint">クリックして選択も可</p>
+      <input id="file" type="file" accept=".xlsx,.xlsm,.pdf" multiple hidden>
+    </div>
+    <ul id="files" class="files"></ul>
+    <button id="run" class="run" disabled>チェック実行</button>
+    <div id="status" class="status"></div>
+  </div>
+
+  <div id="results" class="result"></div>
+
+  <footer>
+    本ページは、文科省が配布する公式セルフチェックツール（<code>research_plan_self_check.py</code> /
+    <code>form_self_check.py</code>）を<b>ブラウザ内で実行するための入れ物</b>です。判定ロジックは読み込んだ公式ツールそのものを使用するため、結果は配布版と同一です。<br>
+    形式面の確認を補助するものであり、「OK」でも記載内容が要件を満たすかは別途ご確認ください。提出の最終判断は応募者ご自身の責任で行ってください。
+  </footer>
+</div>
+
+<script type="module">
+const PYODIDE_VERSION = "0.29.4";
+const PYODIDE_URL = `https://cdn.jsdelivr.net/pyodide/v${PYODIDE_VERSION}/full/`;
+
+// 既定では空（同梱しない）。組織内で同梱したい場合はビルド時に注入できる。
+const PY_SCRIPTS = /*__PY_SCRIPTS__*/{};
+
+const PY_HELPER = `
+import os, shutil, base64, json, sys
+from pathlib import Path
+
+def _reset_work():
+    for d in ("/work/in", "/work/out"):
+        shutil.rmtree(d, ignore_errors=True)
+        os.makedirs(d, exist_ok=True)
+
+def _serialize(result_path):
+    from openpyxl import load_workbook
+    rp = Path(str(result_path))
+    wb = load_workbook(rp)
+    sheets = []
+    for ws in wb.worksheets:
+        rows = []
+        for row in ws.iter_rows(values_only=True):
+            cells = []
+            for c in row:
+                if c is None:
+                    cells.append("")
+                elif hasattr(c, "isoformat"):
+                    cells.append(c.isoformat())
+                else:
+                    cells.append(c)
+            rows.append(cells)
+        sheets.append({"title": ws.title, "rows": rows})
+    b64 = base64.b64encode(rp.read_bytes()).decode()
+    return json.dumps({"filename": rp.name, "b64": b64, "sheets": sheets}, ensure_ascii=False)
+
+def web_run_form1():
+    sys.modules.pop("research_plan_self_check", None)
+    import research_plan_self_check as r
+    return _serialize(r.run(input_path="/work/in", output_file="/work/out/result.xlsx"))
+
+def web_run_forms():
+    sys.modules.pop("form_self_check", None)
+    import form_self_check as f
+    return _serialize(f.run(input_path="/work/in", output_file="/work/out/同意確認書_セルフチェック結果.xlsx"))
+`;
+
+const $ = (id) => document.getElementById(id);
+const statusEl = $("status"), resultsEl = $("results"), runBtn = $("run"), filesEl = $("files");
+let selected = [];
+let pyodide = null;
+const loadedTools = { form1: null, forms: null };   // .py のソース文字列を保持
+
+// ---- ツール(.py)のキャッシュ（書類は一切キャッシュしない） ----
+const TOOL_CACHE_KEY = "spread_tools_cache_v1";
+const TOOL_CACHE_MAX_DAYS = 40;            // これを超えたら自動失効
+let toolCacheSavedAt = null;
+let embedded = false;
+
+function saveToolCache() {
+  if (embedded) return;
+  try {
+    toolCacheSavedAt = Date.now();
+    localStorage.setItem(TOOL_CACHE_KEY, JSON.stringify({
+      form1: loadedTools.form1, forms: loadedTools.forms, savedAt: toolCacheSavedAt
+    }));
+  } catch (e) { /* localStorage不可の環境では何もしない */ }
+}
+function restoreToolCache() {
+  try {
+    const raw = localStorage.getItem(TOOL_CACHE_KEY);
+    if (!raw) return null;
+    const o = JSON.parse(raw);
+    const ageDays = (Date.now() - (o.savedAt || 0)) / 86400000;
+    if (ageDays > TOOL_CACHE_MAX_DAYS) { localStorage.removeItem(TOOL_CACHE_KEY); return "expired"; }
+    if (o.form1) loadedTools.form1 = o.form1;
+    if (o.forms) loadedTools.forms = o.forms;
+    toolCacheSavedAt = o.savedAt || null;
+    return "ok";
+  } catch (e) { return null; }
+}
+function clearToolCache() {
+  try { localStorage.removeItem(TOOL_CACHE_KEY); } catch (e) {}
+  loadedTools.form1 = null; loadedTools.forms = null; toolCacheSavedAt = null;
+  updateToolState();
+}
+window.clearToolCache = clearToolCache;
+
+// 同梱版（ビルドで注入）があれば最優先。なければキャッシュから復元。
+if (PY_SCRIPTS["research_plan_self_check.py"]) { loadedTools.form1 = PY_SCRIPTS["research_plan_self_check.py"]; embedded = true; }
+if (PY_SCRIPTS["form_self_check.py"]) { loadedTools.forms = PY_SCRIPTS["form_self_check.py"]; embedded = true; }
+let cacheState = embedded ? null : restoreToolCache();
+
+function kindOf(file) {
+  const n = file.name.toLowerCase();
+  if (n.endsWith(".xlsx") || n.endsWith(".xlsm")) return "xlsx";
+  if (n.endsWith(".pdf")) return "pdf";
+  return "bad";
+}
+
+function detectTool(name, text) {
+  const n = name.toLowerCase();
+  if (n.includes("research_plan")) return "form1";
+  if (n.includes("form_self_check")) return "forms";
+  if (/EXPECTED_SHEETS_BY_LANGUAGE|研究計画調書_1枚目/.test(text)) return "form1";
+  if (/FILENAME_RULES|申請様式チェックリスト/.test(text)) return "forms";
+  return null;
+}
+
+function fmtDate(ts) {
+  const d = new Date(ts), p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+function renderCacheStatus() {
+  const el = $("toolCache");
+  if (embedded) { el.innerHTML = ""; return; }
+  if (cacheState === "expired") {
+    el.innerHTML = `<span style="color:var(--warn)">前回読み込んだツールは ${TOOL_CACHE_MAX_DAYS} 日以上前のため自動的に破棄しました。最新版を読み込み直してください。</span>`;
+    return;
+  }
+  if ((loadedTools.form1 || loadedTools.forms) && toolCacheSavedAt) {
+    const expire = fmtDate(toolCacheSavedAt + TOOL_CACHE_MAX_DAYS * 86400000);
+    el.innerHTML = `💾 読み込んだツールをこのブラウザに保存しました（${fmtDate(toolCacheSavedAt)} 読み込み／${expire} に自動失効）。`
+      + ` 次回は読み込み不要です。 <a href="#" onclick="clearToolCache();return false;">保存を消去</a>`;
+  } else {
+    el.innerHTML = "";
+  }
+}
+function updateToolState() {
+  $("stForm1").className = loadedTools.form1 ? "chk" : "miss";
+  $("stForm1").textContent = (loadedTools.form1 ? "● " : "○ ") + "様式1用ツール：" + (loadedTools.form1 ? "読み込み済み" : "未読み込み");
+  $("stForms").className = loadedTools.forms ? "chk" : "miss";
+  $("stForms").textContent = (loadedTools.forms ? "● " : "○ ") + "様式0・2・3・4用ツール：" + (loadedTools.forms ? "読み込み済み" : "未読み込み");
+  renderCacheStatus();
+  updateRunBtn();
+}
+
+async function addTools(list) {
+  for (const f of list) {
+    if (!f.name.toLowerCase().endsWith(".py")) continue;
+    const text = await f.text();
+    const kind = detectTool(f.name, text);
+    if (kind === "form1") loadedTools.form1 = text;
+    else if (kind === "forms") loadedTools.forms = text;
+    else setStatus(`<span class="err">「${escapeHtml(f.name)}」は様式1用/様式0・2・3・4用のいずれのツールか判別できませんでした。</span>`);
+  }
+  cacheState = "ok";
+  saveToolCache();
+  updateToolState();
+}
+
+function renderFiles() {
+  filesEl.innerHTML = "";
+  selected.forEach((f, i) => {
+    const k = kindOf(f);
+    const li = document.createElement("li");
+    const tagText = k === "xlsx" ? "様式1" : k === "pdf" ? "様式0/2/3/4" : "対象外";
+    li.innerHTML = `<span class="tag ${k}">${tagText}</span><span>${escapeHtml(f.name)}</span>
+                    <button class="rm" title="削除">✕</button>`;
+    li.querySelector(".rm").onclick = () => { selected.splice(i, 1); renderFiles(); };
+    filesEl.appendChild(li);
+  });
+  updateRunBtn();
+}
+
+function updateRunBtn() {
+  const hasXlsx = selected.some(f => kindOf(f) === "xlsx");
+  const hasPdf = selected.some(f => kindOf(f) === "pdf");
+  const canForm1 = hasXlsx && loadedTools.form1;
+  const canForms = hasPdf && loadedTools.forms;
+  runBtn.disabled = !(canForm1 || canForms);
+}
+
+function addFiles(list) {
+  for (const f of list) {
+    if (!selected.some(s => s.name === f.name && s.size === f.size)) selected.push(f);
+  }
+  renderFiles();
+}
+
+// ドラッグ＆ドロップ / クリック選択（ツール用・書類用）
+function wireDrop(dropId, inputId, handler) {
+  const drop = $(dropId);
+  drop.onclick = () => $(inputId).click();
+  $(inputId).onchange = (e) => handler(e.target.files);
+  ["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("drag"); }));
+  ["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("drag"); }));
+  drop.addEventListener("drop", e => handler(e.dataTransfer.files));
+}
+wireDrop("dropTool", "fileTool", addTools);
+wireDrop("drop", "file", addFiles);
+updateToolState();
+
+function setStatus(html, spin = false) {
+  statusEl.innerHTML = (spin ? '<span class="spinner"></span>' : "") + html;
+}
+
+async function ensurePyodide() {
+  if (pyodide) return pyodide;
+  setStatus("計算エンジンを準備しています…（初回のみ時間がかかります）", true);
+  const { loadPyodide } = await import(PYODIDE_URL + "pyodide.mjs");
+  pyodide = await loadPyodide({ indexURL: PYODIDE_URL });
+  setStatus("必要なライブラリを読み込んでいます…", true);
+  await pyodide.loadPackage("micropip");
+  const micropip = pyodide.pyimport("micropip");
+  await micropip.install(["openpyxl", "pypdf", "pdfminer.six"]);
+  await pyodide.runPythonAsync(`import sys\nif "/" not in sys.path: sys.path.insert(0, "/")\n` + PY_HELPER);
+  return pyodide;
+}
+
+async function runGroup(files, kind) {
+  // 読み込んだツール(.py)を正準名でFSに配置
+  const modName = kind === "form1" ? "research_plan_self_check" : "form_self_check";
+  pyodide.FS.writeFile("/" + modName + ".py", loadedTools[kind]);
+  await pyodide.runPythonAsync("_reset_work()");
+  for (const f of files) {
+    const buf = new Uint8Array(await f.arrayBuffer());
+    pyodide.FS.writeFile("/work/in/" + f.name, buf);
+  }
+  const fn = kind === "form1" ? "web_run_form1" : "web_run_forms";
+  const json = await pyodide.runPythonAsync(`${fn}()`);
+  return JSON.parse(json);
+}
+
+runBtn.onclick = async () => {
+  resultsEl.innerHTML = "";
+  runBtn.disabled = true;
+  const xlsx = selected.filter(f => kindOf(f) === "xlsx");
+  const pdf = selected.filter(f => kindOf(f) === "pdf");
+  try {
+    await ensurePyodide();
+    // ツール未読み込みの注意喚起
+    if (xlsx.length && !loadedTools.form1) warn("様式1（Excel）の書類がありますが、様式1用ツール(.py)が未読み込みのためスキップしました。");
+    if (pdf.length && !loadedTools.forms) warn("様式0・2・3・4（PDF）の書類がありますが、該当ツール(.py)が未読み込みのためスキップしました。");
+
+    if (xlsx.length && loadedTools.form1) {
+      setStatus("様式1（Excel）を確認しています…", true);
+      renderResult("様式1（研究計画調書）の確認結果", await runGroup(xlsx, "form1"));
+    }
+    if (pdf.length && loadedTools.forms) {
+      setStatus("様式0・2・3・4（PDF）を確認しています…", true);
+      renderResult("様式0・2・3・4（同意確認書等）の確認結果", await runGroup(pdf, "forms"));
+    }
+    setStatus("✅ 完了しました。下に結果を表示しています。");
+  } catch (e) {
+    console.error(e);
+    setStatus(`<span class="err">エラーが発生しました：${escapeHtml(String(e))}</span>`);
+  } finally {
+    updateRunBtn();
+  }
+};
+
+function warn(msg) {
+  const d = document.createElement("div");
+  d.className = "warnbox"; d.textContent = "⚠️ " + msg;
+  resultsEl.appendChild(d);
+}
+
+// ---- 結果描画 ----
+const GREEN = new Set(["OK", "記入済み", "添付済み", "対象外", "金額OK", "一致", "Completed", "Attached", "Not Applicable", "Amount OK"]);
+function classify(v) {
+  const s = String(v).trim();
+  if (GREEN.has(s)) return "s-ok";
+  if (s === "未記入" || s === "添付なし" || s.startsWith("Not Entered") || s === "No Attachment") return "s-warn";
+  if (s === "要確認" || /要確認|不足|超過|オーバー|間違い|未達|記入不足|表記ゆれ|形式|Needs Review|Exceeded|Too Low|Invalid|Incomplete|NG/.test(s)) return "s-ng";
+  if (s.endsWith("項目記入済み")) return "s-ok";
+  return "";
+}
+
+function renderResult(heading, res) {
+  const wrap = document.createElement("div");
+  const h = document.createElement("h2"); h.textContent = heading; wrap.appendChild(h);
+  const dl = document.createElement("a");
+  dl.className = "dl"; dl.textContent = "📥 結果Excelをダウンロード"; dl.download = res.filename;
+  dl.href = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + res.b64;
+  wrap.appendChild(dl);
+  const [summary, ...details] = res.sheets;
+  if (summary) wrap.appendChild(renderSummary(summary));
+  details.forEach(sh => wrap.appendChild(renderDetail(sh)));
+  resultsEl.appendChild(wrap);
+}
+
+function findCol(header, names) {
+  for (const n of names) { const i = header.indexOf(n); if (i >= 0) return i; }
+  return -1;
+}
+
+function renderSummary(sheet) {
+  const box = document.createElement("div");
+  const [header, ...rows] = sheet.rows;
+  const cName = findCol(header, ["ファイル名", "File Name"]);
+  const cJudge = findCol(header, ["総合判定", "Overall Result"]);
+  const cItems = findCol(header, ["要確認項目", "Items Needing Review"]);
+  const cPath = findCol(header, ["ファイルパス", "File Path"]);
+  rows.forEach(r => {
+    const fh = document.createElement("div"); fh.className = "filehead";
+    const overall = cJudge >= 0 ? String(r[cJudge]) : "";
+    const isOk = overall === "OK";
+    fh.innerHTML = `<span class="name">${escapeHtml(cName >= 0 ? r[cName] : "")}</span>
+      <span class="badge ${isOk ? "ok" : "ng"}">${escapeHtml(overall || "—")}</span>`;
+    box.appendChild(fh);
+    const tbl = document.createElement("table");
+    let body = "";
+    header.forEach((hname, i) => {
+      if (i === cName || i === cItems) return;
+      let val = r[i];
+      if (i === cPath) val = String(val).replace(/^\/work\/in\//, "");
+      if (String(hname).trim() === "" && String(val).trim() === "") return;
+      body += `<tr><th style="width:38%">${escapeHtml(hname)}</th><td class="${classify(val)}">${escapeHtml(val)}</td></tr>`;
+    });
+    tbl.innerHTML = body;
+    const tw = document.createElement("div"); tw.className = "tablewrap"; tw.appendChild(tbl);
+    box.appendChild(tw);
+    if (cItems >= 0 && String(r[cItems]).trim()) {
+      const d = document.createElement("div"); d.style.cssText = "margin:6px 0 4px;font-size:13px;";
+      d.innerHTML = `<b class="err">要確認項目：</b>${escapeHtml(r[cItems])}`;
+      box.appendChild(d);
+    }
+  });
+  return box;
+}
+
+function renderDetail(sheet) {
+  const det = document.createElement("details"); det.className = "det";
+  const sum = document.createElement("summary");
+  sum.textContent = "詳細チェックを表示（" + sheet.title + "）";
+  det.appendChild(sum);
+  const [header, ...rows] = sheet.rows;
+  const cJudge = findCol(header, ["判定", "Result"]);
+  const tbl = document.createElement("table");
+  let html = "<tr>" + header.map(h => `<th>${escapeHtml(h)}</th>`).join("") + "</tr>";
+  rows.forEach(r => {
+    html += "<tr>" + r.map((v, i) => {
+      const cls = (i === cJudge) ? classify(v) : "";
+      return `<td class="${cls}">${escapeHtml(v)}</td>`;
+    }).join("") + "</tr>";
+  });
+  tbl.innerHTML = html;
+  const tw = document.createElement("div"); tw.className = "tablewrap"; tw.appendChild(tbl);
+  det.appendChild(tw);
+  return det;
+}
+
+function escapeHtml(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+</script>
+</body>
+</html>
