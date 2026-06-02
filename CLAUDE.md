@@ -4,7 +4,11 @@
 使えるようにするプロジェクト。配布物は単一HTML（`docs/index.html`）。
 
 - GitHub（Public）: https://github.com/takayuki1997/SPReAD-checker
+- **公開URL（GitHub Pages・稼働中）: https://takayuki1997.github.io/SPReAD-checker/**
+  - プロジェクトサイト（`/SPReAD-checker/`）。ユーザーサイト `https://takayuki1997.github.io/` とは別物で互いに無干渉。
+  - 公開元は main ブランチの `/docs`。`docs/index.html` を push すれば自動再デプロイ（反映に数十秒〜数分）。
 - ローカル作業ディレクトリ: `/Users/takayuki/Projects/SPReAD_CheckTool`
+- ページ独自 favicon（青角丸＋白チェックのインラインSVG）を `<head>` に設定済み。ドメイン直下のトップサイトとは別アイコン。
 
 ## 何をするものか
 
@@ -80,14 +84,31 @@ open docs/index.html             # 手動確認
 - 様式0/2/3/4：pdfminer抽出がPyodideでも動作、種別判定・結果がネイティブと一致。
 - 実ブラウザ：http / file:// 両方で 投入→判定→表示→Excel DL 成功。キャッシュの復元・自動失効も成功。
 
-## 文科省がツールを改訂したら
+## 上流（.py／様式）が変わったときの頑健性
 
-- 同梱なし（既定）：HTMLはUIのみのため原則改修不要。利用者が新しい .py を読み込めば追従。
-  ライブラリ追加など仕様変更時のみ template を調整。
+このアプリは「公式 .py をそのまま実行する薄い殻」で、**判定ロジックも様式レイアウト（セル位置・シート名・文字数制限等）も一切持たない**。そのため大半の上流変更で無改修のまま動く。実機で「名前変更＋中身修正した .py」が殻無改修で完走することを確認済み。
+
+- **様式 `.xlsx`／`.pdf` が変わった場合 → 殻は無関係で壊れない**。様式を理解しているのは .py 側。様式変更には文科省が対応 .py を出すので、新様式＋対応 .py を読み込めば動く。古い .py のまま新様式を入れると判定がズレ得る（公式ツール直実行でも同じ）が、40日キャッシュ失効＋「最新版を読み込み直して」表示で予防。
+- **`.py` の中身修正（しきい値・メッセージ・チェック増減・セル位置変更）→ そのまま動き、新ロジックが自動反映**（利用者は新 .py を読み込むだけ）。
+- **“壊れ得る”のは .py の外側インターフェース変更の稀なケースのみ**：
+  1. 新しいライブラリが必要になる → import 失敗。対処：template の micropip インストール一覧に1行追加→再ビルド。
+  2. `run(input_path=, output_file=)` の名称・引数変更 → 呼び出し1か所修正。READMEで公開APIとされ変更されにくい。
+  3. ファイル名も中身マーカーも判別不能になる → `detectTool` の判別が外れる。`research_plan`/`form_self_check` という名 or 中身の特徴語（EXPECTED_SHEETS_BY_LANGUAGE/FILENAME_RULES 等）で判定。`_v2` 等の接尾辞は問題なし。
+
+→ いずれも数行修正＋`node web/build.mjs`＋push で復旧可能。**運用方針：公募期間中に公式更新が出たら、一度通しで動作確認し、必要なら微修正する**。
+
+## 文科省がツールを改訂したら（手順）
+
+- 同梱なし（既定・推奨）：HTMLはUIのみのため原則改修不要。利用者が新しい .py を読み込めば追従。
+  上記「壊れ得るケース」に該当する更新のときだけ template を調整して再ビルド・push。
 - 同梱版：新しい .py を `vendor/` に上書き → `node web/build.mjs --embed` → 配布。
 
 ## 今後の候補（未着手）
 
-- GitHub Pages で B-1 の公開URLを無料発行（`docs/index.html` 配置＋Pages有効化）。今回は見送り。
 - 完全オフライン版（Pyodide本体・wheelを同梱。ファイルは重くなる）。
-- UI文言・レイアウト調整。
+- UI文言・レイアウト調整、①(.py入手)導線のさらなる親切化。
+
+## 公開・実施済み
+
+- GitHub Public リポジトリ作成、配布物を `docs/` に一本化、GitHub Pages で公開URL稼働。
+- ページ独自 favicon 設定。
