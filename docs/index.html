@@ -52,15 +52,11 @@
   .toolstate { font-size: 13.5px; margin-top: 14px; display: flex; gap: 12px; flex-wrap: wrap; }
   .chk { color: var(--ok); font-weight: 700; background: #e6f7ee; padding: 4px 12px; border-radius: 999px; }
   .miss { color: var(--mut); font-weight: 600; padding: 4px 12px; border-radius: 999px; background: #f2f1f5; }
-  .reloadLink { display: none; font-size: 12.5px; color: var(--accent); font-weight: 600; margin-top: 12px; }
-  /* 両方読み込み済み：ステップ①をグレーアウトし、波線ボックス等を隠す（読み込み済みピルは色を残す） */
+  /* 両方読み込み済み：ステップ①をグレーアウトし、波線ボックス等を隠す（読み込み済みピルは色を残す）。
+     再読み込みはキャッシュの「保存を消去」で行える */
   #cardTool.done { background: #f4f3f6; box-shadow: none; }
   #cardTool.done .step { opacity: .5; }
   #cardTool.done #dropTool, #cardTool.done #toolWarn { display: none; }
-  #cardTool.done .reloadLink { display: inline-block; }
-  #cardTool.done.reopen #dropTool, #cardTool.done.reopen #toolWarn { display: block; }
-  #cardTool.done.reopen .step { opacity: 1; }
-  #cardTool.done.reopen .reloadLink { display: none; }
 
   button.run { background: var(--accent); color: #fff; border: none; padding: 13px 32px; border-radius: 14px;
                font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 12px 22px -10px var(--accent-soft); }
@@ -127,7 +123,6 @@
       <span id="stForm1" class="miss">○ 様式1用ツール：未読み込み</span>
       <span id="stForms" class="miss">○ 様式0・2・3・4用ツール：未読み込み</span>
     </div>
-    <a href="#" id="reloadTool" class="reloadLink">🔄 別の .py を読み込み直す</a>
     <div id="toolCache" class="note"></div>
     <p class="note" id="toolWarn">
       ⚠️ このページには文科省のツールは含まれていません。<b>必ず公式配布元から入手した .py</b> をご自身で読み込んでください。<br>
@@ -308,9 +303,6 @@ function updateToolState() {
   updateRunBtn();
 }
 
-// 「別の .py を読み込み直す」: 波線ボックスを一時的に再表示
-$("reloadTool").onclick = (e) => { e.preventDefault(); $("cardTool").classList.add("reopen"); };
-
 async function addTools(list) {
   for (const f of list) {
     if (!f.name.toLowerCase().endsWith(".py")) continue;
@@ -322,7 +314,6 @@ async function addTools(list) {
   }
   cacheState = "ok";
   saveToolCache();
-  $("cardTool").classList.remove("reopen");   // 読み込み後はまた折りたたむ
   updateToolState();
 }
 
