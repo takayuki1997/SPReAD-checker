@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SPReAD 応募書類 形式チェック（ブラウザ版）</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%230969da'/%3E%3Cpath%20d='M17%2033l10%2010%2021-23'%20fill='none'%20stroke='%23fff'%20stroke-width='7'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20rx='14'%20fill='%2310b6a0'/%3E%3Cpath%20d='M17%2033l10%2010%2021-23'%20fill='none'%20stroke='%23fff'%20stroke-width='7'%20stroke-linecap='round'%20stroke-linejoin='round'/%3E%3C/svg%3E">
 
 <style>
   /* ===== やわらかミニマル × ミント配色 ===== */
@@ -52,6 +52,15 @@
   .toolstate { font-size: 13.5px; margin-top: 14px; display: flex; gap: 12px; flex-wrap: wrap; }
   .chk { color: var(--ok); font-weight: 700; background: #e6f7ee; padding: 4px 12px; border-radius: 999px; }
   .miss { color: var(--mut); font-weight: 600; padding: 4px 12px; border-radius: 999px; background: #f2f1f5; }
+  .reloadLink { display: none; font-size: 12.5px; color: var(--accent); font-weight: 600; margin-top: 12px; }
+  /* 両方読み込み済み：ステップ①をグレーアウトし、波線ボックス等を隠す（読み込み済みピルは色を残す） */
+  #cardTool.done { background: #f4f3f6; box-shadow: none; }
+  #cardTool.done .step { opacity: .5; }
+  #cardTool.done #dropTool, #cardTool.done #toolWarn { display: none; }
+  #cardTool.done .reloadLink { display: inline-block; }
+  #cardTool.done.reopen #dropTool, #cardTool.done.reopen #toolWarn { display: block; }
+  #cardTool.done.reopen .step { opacity: 1; }
+  #cardTool.done.reopen .reloadLink { display: none; }
 
   button.run { background: var(--accent); color: #fff; border: none; padding: 13px 32px; border-radius: 14px;
                font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 12px 22px -10px var(--accent-soft); }
@@ -107,7 +116,7 @@
   </div>
 
   <!-- ① ツール(.py)の読み込み -->
-  <div class="card">
+  <div class="card" id="cardTool">
     <p class="step"><span class="n">1</span>形式チェックツール（.py）を読み込む</p>
     <div id="dropTool" class="drop">
       <p>🐍 文科省配布の <b>.py</b> ファイルをドラッグ＆ドロップ（クリックで選択）</p>
@@ -118,8 +127,9 @@
       <span id="stForm1" class="miss">○ 様式1用ツール：未読み込み</span>
       <span id="stForms" class="miss">○ 様式0・2・3・4用ツール：未読み込み</span>
     </div>
+    <a href="#" id="reloadTool" class="reloadLink">🔄 別の .py を読み込み直す</a>
     <div id="toolCache" class="note"></div>
-    <p class="note">
+    <p class="note" id="toolWarn">
       ⚠️ このページには文科省のツールは含まれていません。<b>必ず公式配布元から入手した .py</b> をご自身で読み込んでください。<br>
       公式配布元（Box「形式チェックツール関連」）：
       <a href="https://mext.ent.box.com/s/qf8vbuj3pso1hj9mwp1vs6rx2hashpuc/folder/385379226260" target="_blank" rel="noopener">こちらからダウンロード</a>
@@ -292,9 +302,14 @@ function updateToolState() {
   $("stForm1").textContent = (loadedTools.form1 ? "● " : "○ ") + "様式1用ツール：" + (loadedTools.form1 ? "読み込み済み" : "未読み込み");
   $("stForms").className = loadedTools.forms ? "chk" : "miss";
   $("stForms").textContent = (loadedTools.forms ? "● " : "○ ") + "様式0・2・3・4用ツール：" + (loadedTools.forms ? "読み込み済み" : "未読み込み");
+  // 両方読み込み済みならステップ①を完了表示（グレーアウト）に
+  $("cardTool").classList.toggle("done", !!(loadedTools.form1 && loadedTools.forms));
   renderCacheStatus();
   updateRunBtn();
 }
+
+// 「別の .py を読み込み直す」: 波線ボックスを一時的に再表示
+$("reloadTool").onclick = (e) => { e.preventDefault(); $("cardTool").classList.add("reopen"); };
 
 async function addTools(list) {
   for (const f of list) {
@@ -307,6 +322,7 @@ async function addTools(list) {
   }
   cacheState = "ok";
   saveToolCache();
+  $("cardTool").classList.remove("reopen");   // 読み込み後はまた折りたたむ
   updateToolState();
 }
 
