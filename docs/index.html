@@ -82,7 +82,7 @@
     <p class="step"><span class="n">1</span>形式チェックツール（.py）を読み込む</p>
     <div id="dropTool" class="drop">
       <p>🐍 文科省配布の <b>.py</b> ファイルをドラッグ＆ドロップ（クリックで選択）</p>
-      <p class="hint">research_plan_self_check（様式1用）／ form_self_check（様式0・2・3・4用）</p>
+      <p class="hint">research_plan_self_check.py（様式1用）／ form_self_check.py（様式0・2・3・4用）</p>
       <input id="fileTool" type="file" accept=".py" multiple hidden>
     </div>
     <div class="toolstate">
@@ -108,6 +108,11 @@
       <input id="file" type="file" accept=".xlsx,.xlsm,.pdf" multiple hidden>
     </div>
     <ul id="files" class="files"></ul>
+  </div>
+
+  <!-- ③ チェック実行 -->
+  <div class="card">
+    <p class="step"><span class="n">3</span>チェックを実行する</p>
     <button id="run" class="run" disabled>チェック実行</button>
     <div id="status" class="status"></div>
   </div>
@@ -117,7 +122,10 @@
   <footer>
     本ページは、文科省が配布する公式セルフチェックツール（<code>research_plan_self_check.py</code> /
     <code>form_self_check.py</code>）を<b>ブラウザ内で実行するための入れ物</b>です。判定ロジックは読み込んだ公式ツールそのものを使用するため、結果は配布版と同一です。<br>
-    形式面の確認を補助するものであり、「OK」でも記載内容が要件を満たすかは別途ご確認ください。提出の最終判断は応募者ご自身の責任で行ってください。
+    形式面の確認を補助するものであり、「OK」でも記載内容が要件を満たすかは別途ご確認ください。提出の最終判断は応募者ご自身の責任で行ってください。<br>
+    透明性確保のため、本ページのソースコードを公開しています：
+    <a href="https://github.com/takayuki1997/SPReAD-checker" target="_blank" rel="noopener">github.com/takayuki1997/SPReAD-checker</a>
+    （有志作成・非公式。書類が外部送信されないこともコードでご確認いただけます）
   </footer>
 </div>
 

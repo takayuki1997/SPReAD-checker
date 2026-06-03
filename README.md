@@ -20,17 +20,16 @@
 
 ## 配布物
 
-ビルドすると `docs/index.html`（自己完結の単一ファイル）が生成されます。これが配布物の正本で、GitHub Pages の公開元でもあります。配り方は2通り:
+ビルドすると `docs/index.html`（自己完結の単一ファイル）が生成されます。これが配布物の正本で、GitHub Pages の公開元でもあります。
 
-- **B-1: URLで配る** … `index.html` を社内サーバや静的ホスティングに置き、URLを共有。更新が一括で楽。
-- **B-2: HTMLファイルを配る** … `index.html` をそのまま配布（メール添付・共有フォルダ）。ダブルクリックで開く。
-  ※どちらも書類はPC外に出ません。初回起動時のみネット接続が必要です。
+`index.html` を静的ホスティング（GitHub Pages など）に置き、URLを共有して使います。更新が一括で反映でき、`localStorage` も安定します。
+※書類はPC外に出ません。初回起動時のみネット接続が必要です。
 
-両方式とも実ブラウザ(Chrome)で動作確認済み。
+実ブラウザ(Chrome)で動作確認済み。
 
 ## 使い方（利用者）
 
-1. `index.html` を開く（URL または ファイルをダブルクリック）。
+1. 公開URLを開く。
 2. **① ツールを読み込む**：公式から入手した `research_plan_self_check*.py` /
    `form_self_check*.py` をドラッグ＆ドロップ（ファイル名で種別を自動判別。`_v1` 等が付いていてもOK）。
 3. **② 書類を読み込む**：様式1（.xlsx）や 様式0・2・3・4（.pdf）をドラッグ＆ドロップ（複数可）。
@@ -65,8 +64,8 @@ web/app/index.template.html   UI本体（CSS/JS）。__PY_SCRIPTS__ に.pyを埋
 web/build.mjs          ビルド: テンプレ + vendor/*.py -> dist/index.html
 docs/index.html        ★配布物の正本（自己完結HTML・GitHub Pages 公開元）
 web/test_pyodide*.mjs  疎通確認(Node版Pyodide): Excel/PDF が動くか
-web/e2e_test.mjs       実ブラウザE2E(http配信, B-1)
-web/verify_fileurl.mjs 実ブラウザ検証(file://, B-2) + スクショ
+web/e2e_test.mjs       実ブラウザE2E(http配信)
+web/verify_fileurl.mjs 実ブラウザ検証(file://) + スクショ
 samples/               検証用サンプル（様式1, 生成PDF）
 tools/make_sample_pdfs.py  検証用PDF生成（配布物には含めない）
 baseline*/             ネイティブ/Pyodide の基準出力（比較用）
@@ -85,7 +84,7 @@ baseline*/             ネイティブ/Pyodide の基準出力（比較用）
 - **書類は一切キャッシュしません**（機密のため）。保存対象は公開ツールの .py のみ。
 - **40日で自動失効**：保存時刻を記録し、40日を超えたら自動破棄して「最新版を読み込み直してください」と表示。公募中にツールが更新された場合の保険。
 - 画面の「保存を消去」でいつでも手動削除可。失効日数は `index.template.html` の `TOOL_CACHE_MAX_DAYS` で変更可。
-- 注意：`localStorage` は配信元（オリジン）ごと。**B-1（URL配信）では安定**。**B-2（file:// 直開き）は環境により保存されない／共有されない**ことがある（その場合は毎回読み込み）。
+- 注意：`localStorage` は配信元（オリジン）ごと・端末/ブラウザのプロファイルごとに分離されます（端末やブラウザを変えると再読み込みが必要＝仕様）。
 
 ## 技術メモ・制限
 
