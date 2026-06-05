@@ -63,16 +63,16 @@ MIT ライセンスにしたのは、**プログラミングが得意な方が�
 - **書類は端末外に出さない**という設計思想（処理はすべてブラウザ内）を尊重いただけると、本ツールの価値が保てます。
 - 改善は Pull Request / Issue / fork いずれでも歓迎します。
 
+## 謝辞
+
+本ツールの作成にあたり、JAIST（北陸先端科学技術大学院大学）の [Tech サークル](https://www.jaist.ac.jp/misc/circles/tech/) の皆様にコードをご確認いただきました。この場を借りて感謝申し上げます。
+
 ## 作成者・連絡先
 
 **Takayuki OGI**（Fukushima Univ. / JAIST）
 
 - 本ツールは**個人の有志活動であり、非公式**です。文部科学省および作成者の所属機関の公式ツール・公式見解ではありません。
 - ご質問・不具合のご報告は **GitHub の [Issue](https://github.com/takayuki1997/SPReAD-checker/issues)** へお願いします。
-
-## 謝辞
-
-本ツールの作成にあたり、JAIST（北陸先端科学技術大学院大学）の [Tech サークル](https://www.jaist.ac.jp/misc/circles/tech/) の皆様にコードをご確認いただきました。この場を借りて感謝申し上げます。
 
 ## 配布物
 
