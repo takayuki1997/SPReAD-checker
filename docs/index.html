@@ -138,10 +138,11 @@
   <div class="card">
     <p class="step"><span class="n">2</span>確認する書類を読み込む</p>
     <div id="drop" class="drop">
-      <p>📄 様式1（.xlsx）／ 様式0・2・3・4（.pdf）をドラッグ＆ドロップ（複数可）</p>
+      <p>📄 様式1（.xlsx）／ 様式0・2・3・4（.pdf）をドラッグ＆ドロップ</p>
       <p class="hint">クリックして選択も可</p>
       <input id="file" type="file" accept=".xlsx,.xlsm,.pdf" multiple hidden>
     </div>
+    <p class="hint" style="margin-top:8px">⚠️ <b>このツールは、1回に1申請者（1人）分の書類を処理する想定です。</b>複数の申請者分をまとめて投入すると、全員分が「1人の提出物」として判定され、結果が正しくなりません。申請者ごとに分けて確認してください。</p>
     <ul id="files" class="files"></ul>
   </div>
 
@@ -216,6 +217,7 @@ const $ = (id) => document.getElementById(id);
 const statusEl = $("status"), resultsEl = $("results"), runBtn = $("run"), filesEl = $("files");
 let selected = [];
 let pyodide = null;
+let running = false;   // 実行中フラグ（再入防止）。実行中はファイル追加でボタンを再有効化しない
 const loadedTools = { form1: null, forms: null };   // .py のソース文字列を保持
 
 // ---- ツール(.py)のキャッシュ（書類は一切キャッシュしない） ----
@@ -337,7 +339,7 @@ function updateRunBtn() {
   const hasPdf = selected.some(f => kindOf(f) === "pdf");
   const canForm1 = hasXlsx && loadedTools.form1;
   const canForms = hasPdf && loadedTools.forms;
-  runBtn.disabled = !(canForm1 || canForms);
+  runBtn.disabled = running || !(canForm1 || canForms);
 }
 
 function addFiles(list) {
@@ -384,6 +386,10 @@ async function runGroup(files, kind) {
   const modName = kind === "form1" ? "research_plan_self_check" : "form_self_check";
   pyodide.FS.writeFile("/" + modName + ".py", loadedTools[kind]);
   await pyodide.runPythonAsync("_reset_work()");
+  // 同名衝突の検出：FSはファイル名で書くため、同名は後勝ちで上書きされ片方が検査されない
+  const seen = new Set(), dup = new Set();
+  for (const f of files) { if (seen.has(f.name)) dup.add(f.name); else seen.add(f.name); }
+  if (dup.size) warn(`同じ名前のファイルが複数あります（${[...dup].join("、")}）。同名は後から追加した方で上書きされ、もう一方は検査されません。名前を変えて1つずつ確認してください。`);
   for (const f of files) {
     const buf = new Uint8Array(await f.arrayBuffer());
     pyodide.FS.writeFile("/work/in/" + f.name, buf);
@@ -394,6 +400,8 @@ async function runGroup(files, kind) {
 }
 
 runBtn.onclick = async () => {
+  if (running) return;            // 再入防止：実行中の二重起動を弾く
+  running = true;
   resultsEl.innerHTML = "";
   runBtn.disabled = true;
   const xlsx = selected.filter(f => kindOf(f) === "xlsx");
@@ -417,6 +425,7 @@ runBtn.onclick = async () => {
     console.error(e);
     setStatus(`<span class="err">エラーが発生しました：${escapeHtml(String(e))}</span>`);
   } finally {
+    running = false;
     updateRunBtn();
   }
 };
