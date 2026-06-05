@@ -10,6 +10,8 @@ baseline_pyodide/
 *.xlsm
 *.pdf
 *.docx
+# 検証スクショは実書類の内容を写し込み得るため追跡しない（毎回上書きされる生成物）
+web/screenshot.png
 # ただし vendor の .py は vendor/ ごと無視済み（当方コードの .py は対象外）
 
 # --- 環境・生成物 ---

@@ -107,8 +107,9 @@
   </header>
 
   <div class="card privacy">
-    🔒 <b>ツール(.py)も書類も、このパソコンの外に送信されません。</b>
+    🔒 <b>このページ自身は、ツール(.py)も書類も外部に送信しません。</b>
     すべてブラウザ内で実行されます（インターネット接続は、最初に計算エンジンを読み込むためだけに使われます）。
+    実際の処理は読み込んだ <code>.py</code> に従うため、<b>必ず公式配布元の正規版の <code>.py</code></b> をご利用ください。
   </div>
 
   <!-- ① ツール(.py)の読み込み -->
@@ -159,7 +160,7 @@
     形式面の確認を補助するものであり、「OK」でも記載内容が要件を満たすかは別途ご確認ください。提出の最終判断は応募者ご自身の責任で行ってください。<br>
     透明性確保のため、本ページのソースコードを公開しています：
     <a href="https://github.com/takayuki1997/SPReAD-checker" target="_blank" rel="noopener">github.com/takayuki1997/SPReAD-checker</a>
-    （有志作成・非公式。書類が外部送信されないこともコードでご確認いただけます）
+    （有志作成・非公式。本ページのコードが何も外部送信しないことをコードでご確認いただけます。判定は正規の公式 <code>.py</code> を読み込む限り配布版と同一です）
   </footer>
 </div>
 
@@ -371,7 +372,9 @@ async function ensurePyodide() {
   setStatus("必要なライブラリを読み込んでいます…", true);
   await pyodide.loadPackage("micropip");
   const micropip = pyodide.pyimport("micropip");
-  await micropip.install(["openpyxl", "pypdf", "pdfminer.six"]);
+  // バージョン固定：ネイティブ照合済みの版にピンし、「結果は配布版と同一」を再現可能に保つ。
+  // 更新時は .venv で検証→ pip freeze の版に合わせ、README の検証記録も更新すること。
+  await micropip.install(["openpyxl==3.1.5", "pypdf==6.12.2", "pdfminer.six==20260107"]);
   await pyodide.runPythonAsync(`import sys\nif "/" not in sys.path: sys.path.insert(0, "/")\n` + PY_HELPER);
   return pyodide;
 }
