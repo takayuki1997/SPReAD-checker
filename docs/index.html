@@ -18,7 +18,9 @@
   .hd { display: flex; align-items: center; gap: 14px; margin-bottom: 26px; }
   .hd .logo { width: 46px; height: 46px; border-radius: 15px; background: var(--accent); color: #fff;
               display: flex; align-items: center; justify-content: center; font-size: 25px; font-weight: 800;
-              box-shadow: 0 9px 20px -8px var(--accent-soft); flex: none; }
+              box-shadow: 0 9px 20px -8px var(--accent-soft); flex: none;
+              text-decoration: none; cursor: pointer; }
+  .hd a.logo:hover { filter: brightness(1.08); }
   h1 { font-size: 23px; margin: 0; letter-spacing: .02em; }
   .sub { color: var(--mut); font-size: 13px; margin-top: 3px; }
 
@@ -99,7 +101,7 @@
 <body>
 <div class="wrap">
   <header class="hd">
-    <div class="logo">✓</div>
+    <a class="logo" href="https://takayuki1997.github.io/SPReAD-checker/" title="このツールの公開ページを開く" aria-label="このツールの公開ページを開く">✓</a>
     <div>
       <h1>SPReAD 応募書類 形式チェック（ブラウザ版）</h1>
       <div class="sub">第2回 SPReAD 公募 — 様式1（Excel）／様式0・2・3・4（PDF）の形式セルフチェック</div>
@@ -156,12 +158,14 @@
   <div id="results" class="result"></div>
 
   <footer>
-    本ページは、文科省が配布する公式セルフチェックツール（<code>research_plan_self_check.py</code> /
+    本ページは、文科省が配布する<a href="https://mext.ent.box.com/s/qf8vbuj3pso1hj9mwp1vs6rx2hashpuc/folder/385379226260" target="_blank" rel="noopener">公式セルフチェックツール</a>（<code>research_plan_self_check.py</code> /
     <code>form_self_check.py</code>）を<b>ブラウザ内で実行するための入れ物</b>です。判定ロジックは読み込んだ公式ツールそのものを使用するため、結果は配布版と同一です。<br>
     形式面の確認を補助するものであり、「OK」でも記載内容が要件を満たすかは別途ご確認ください。提出の最終判断は応募者ご自身の責任で行ってください。<br>
     透明性確保のため、本ページのソースコードを公開しています：
     <a href="https://github.com/takayuki1997/SPReAD-checker" target="_blank" rel="noopener">github.com/takayuki1997/SPReAD-checker</a>
-    （有志作成・非公式。本ページのコードが何も外部送信しないことをコードでご確認いただけます。判定は正規の公式 <code>.py</code> を読み込む限り配布版と同一です）
+    （本ページのコードが何も外部送信しないことをコードでご確認いただけます。判定は正規の公式 <code>.py</code> を読み込む限り配布版と同一です）<br>
+    作成者：Takayuki OGI（Fukushima Univ. / JAIST）。<b>個人の有志活動であり、非公式</b>です（文科省および所属機関の公式ツール・公式見解ではありません）。
+    ご質問・不具合のご報告は <a href="https://github.com/takayuki1997/SPReAD-checker/issues" target="_blank" rel="noopener">GitHub の Issue</a> へお願いします。
   </footer>
 </div>
 
