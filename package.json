@@ -1,1 +1,1 @@
-{"name":"spread-checktool","private":true,"type":"module","license":"MIT","dependencies":{"puppeteer-core":"^25.1.0","pyodide":"^0.29.4"}}
+{"name":"spread-checktool","private":true,"type":"module","license":"MIT","dependencies":{"puppeteer-core":"^25.1.0","pyodide":"0.29.4"}}

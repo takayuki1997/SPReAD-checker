@@ -1,4 +1,4 @@
-// dist/index.html を生成する。
+// docs/index.html を生成する。
 // 既定: 文科省ツール(.py)は同梱しない（利用者が実行時に各自読み込む）。
 //        → 配布物に公式ツールを含まないため、再配布の懸念を避けられる。
 // --embed: 自機関内で同梱したい場合のみ vendor/*.py を埋め込む（再配布に当たり得る点に留意）。
@@ -22,7 +22,11 @@ if (embed) {
 const template = fs.readFileSync(TEMPLATE, "utf8");
 const marker = "/*__PY_SCRIPTS__*/{}";
 if (!template.includes(marker)) throw new Error("埋め込みマーカーが見つかりません: " + marker);
-const html = template.replace(marker, JSON.stringify(payload));
+// JSON.stringify は < をエスケープしないため、埋め込む .py に "</script>" が
+// 含まれるとインラインスクリプトが早期終了する。< に退避して防ぐ（--embed時のみ関係）。
+// 関数置換にして、置換文字列内の $ が特殊扱いされる問題（.py 中の $）も回避。
+const payloadJson = JSON.stringify(payload).replace(/</g, "\\u003c");
+const html = template.replace(marker, () => payloadJson);
 
 fs.mkdirSync(OUT_DIR, { recursive: true });
 const outFile = path.join(OUT_DIR, "index.html");

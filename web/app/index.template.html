@@ -307,16 +307,16 @@ function updateToolState() {
 }
 
 async function addTools(list) {
+  let added = false;
   for (const f of list) {
     if (!f.name.toLowerCase().endsWith(".py")) continue;
     const text = await f.text();
     const kind = detectTool(f.name, text);
-    if (kind === "form1") loadedTools.form1 = text;
-    else if (kind === "forms") loadedTools.forms = text;
+    if (kind === "form1") { loadedTools.form1 = text; added = true; }
+    else if (kind === "forms") { loadedTools.forms = text; added = true; }
     else setStatus(`<span class="err">「${escapeHtml(f.name)}」は様式1用/様式0・2・3・4用のいずれのツールか判別できませんでした。</span>`);
   }
-  cacheState = "ok";
-  saveToolCache();
+  if (added) { cacheState = "ok"; saveToolCache(); }   // 判別成功時のみ保存（無効データの混入を防ぐ）
   updateToolState();
 }
 
@@ -437,13 +437,36 @@ function warn(msg) {
 }
 
 // ---- 結果描画 ----
-const GREEN = new Set(["OK", "記入済み", "添付済み", "対象外", "金額OK", "一致", "Completed", "Attached", "Not Applicable", "Amount OK"]);
+// 色分けは推測ではなく公式ツールの判定語彙をそのまま写す（出典:
+// research_plan_self_check.py STATUS_LABEL_EN / form_self_check.py OK_STATUSES 等）。
+// 画面の色は補助。テキスト（公式判定）が正で、結果Excelと一致する。
+const GREEN = new Set([            // 合格・問題なし
+  "OK", "記入済み", "対象外", "金額OK", "添付済み", "チェック済み",
+  "Completed", "Not Applicable", "Amount OK", "Attached",
+]);
+const WARN = new Set([             // 未入力・未対応（致命ではないが要対応）
+  "未記入", "未記入（カタカナ）", "未記入（漢字）", "添付なし",
+  "未チェック", "未チェック（学生の場合必須）",
+  "Not Entered", "No Attachment",
+]);
+const NG = new Set([               // 不備・要確認・エラー
+  "要確認", "画像は1枚のみ",
+  "文字数不足", "文字数オーバー", "文字数超過", "文字数要確認",
+  "桁数間違い", "日付要確認", "記入不足", "メールアドレス形式要確認",
+  "表記ゆれ（リストタブを再度ご確認ください）",
+  "金額未達（10万未満）", "金額超過（500万超）",
+  "判断不可（PDFスキャン不可につき判断不可）", "読込エラー",
+  "Needs Review", "Only one image is allowed",
+  "Character Count Too Low", "Character Limit Exceeded", "Character Count Needs Review",
+  "Invalid Number of Digits", "Date Needs Review", "Incomplete", "Email Format Needs Review",
+  "Inconsistent formatting (please check the List tab again)",
+  "Amount Below Minimum", "Amount Exceeds Maximum",
+]);
 function classify(v) {
   const s = String(v).trim();
-  if (GREEN.has(s)) return "s-ok";
-  if (s === "未記入" || s === "添付なし" || s.startsWith("Not Entered") || s === "No Attachment") return "s-warn";
-  if (s === "要確認" || /要確認|不足|超過|オーバー|間違い|未達|記入不足|表記ゆれ|形式|Needs Review|Exceeded|Too Low|Invalid|Incomplete|NG/.test(s)) return "s-ng";
-  if (s.endsWith("項目記入済み")) return "s-ok";
+  if (GREEN.has(s) || s.endsWith("項目記入済み")) return "s-ok";  // 「N項目記入済み」は動的合格値
+  if (WARN.has(s)) return "s-warn";
+  if (NG.has(s) || s.startsWith("要確認")) return "s-ng";          // 「要確認（…）」前置一致
   return "";
 }
 
@@ -486,7 +509,9 @@ function renderSummary(sheet) {
       let val = r[i];
       if (i === cPath) val = String(val).replace(/^\/work\/in\//, "");
       if (String(hname).trim() === "" && String(val).trim() === "") return;
-      body += `<tr><th style="width:38%">${escapeHtml(hname)}</th><td class="${classify(val)}">${escapeHtml(val)}</td></tr>`;
+      // パス列は判定値ではないので色分けしない（ファイル名に「形式」等を含む際の誤検知を防ぐ）
+      const cls = (i === cPath) ? "" : classify(val);
+      body += `<tr><th style="width:38%">${escapeHtml(hname)}</th><td class="${cls}">${escapeHtml(val)}</td></tr>`;
     });
     tbl.innerHTML = body;
     const tw = document.createElement("div"); tw.className = "tablewrap"; tw.appendChild(tbl);

@@ -43,9 +43,6 @@ def docx_paragraphs(path):
 
 def which_form(path):
     name = os.path.basename(path)
-    for key in OUT_NAMES:
-        if key.replace("様式", "様式") in name:
-            pass
     if "様式0" in name:
         return "様式0"
     if "様式2" in name:

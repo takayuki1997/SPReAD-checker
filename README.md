@@ -88,7 +88,7 @@ python3 -m venv .venv && .venv/bin/pip install openpyxl pdfminer.six pypdf
 npm install            # pyodide, puppeteer-core
 
 # ビルド（既定: ツール同梱なし。利用者が .py を実行時に読み込む）
-node web/build.mjs           # -> docs/index.html（約23KB・UIのみ）
+node web/build.mjs           # -> docs/index.html（約29KB・UIのみ）
 
 # （任意）自機関内で同梱したい場合のみ。再配布に当たり得る点に留意。
 node web/build.mjs --embed   # vendor/*.py を埋め込む（約148KB）
@@ -105,7 +105,7 @@ node web/build.mjs --embed   # vendor/*.py を埋め込む（約148KB）
 ```
 vendor/                配布版オリジナル.py（無改変）。ビルドの入力
 web/app/index.template.html   UI本体（CSS/JS）。__PY_SCRIPTS__ に.pyを埋め込む
-web/build.mjs          ビルド: テンプレ + vendor/*.py -> dist/index.html
+web/build.mjs          ビルド: テンプレ + vendor/*.py -> docs/index.html
 docs/index.html        ★配布物の正本（自己完結HTML・GitHub Pages 公開元）
 web/test_pyodide*.mjs  疎通確認(Node版Pyodide): Excel/PDF が動くか
 web/e2e_test.mjs       実ブラウザE2E(http配信)
@@ -138,4 +138,3 @@ baseline*/             ネイティブ/Pyodide の基準出力（比較用）
 - 完全オフライン配布が必要な場合は、Pyodide本体とwheelを同梱する構成に拡張できます（ファイルは重くなります）。
 - 利用条件: 本ツールは文科省配布ツールを自機関の応募者・担当者の確認用に内部利用する範囲で扱ってください。
   改変版を第三者へ再配布することは配布元の規約で禁止されています。
-```

@@ -66,20 +66,28 @@ async function main() {
     const names = [...document.querySelectorAll("#results .filehead .name")].map(e => e.textContent);
     const dls = [...document.querySelectorAll("#results a.dl")].map(e => e.getAttribute("download"));
     const detailRows = document.querySelectorAll("#results details table tr").length;
-    return { heads, badges, names, dls, detailRows };
+    // 表示退行(色分けの欠落・誤り)検出用: バッジの ok/ng クラスと、色付けされたセル数
+    const badgeClasses = [...document.querySelectorAll("#results .badge")].map(e => e.className);
+    const coloredCells = document.querySelectorAll("#results td.s-ok, #results td.s-warn, #results td.s-ng").length;
+    return { heads, badges, names, dls, detailRows, badgeClasses, coloredCells };
   });
   console.log("[5] 結果:");
   console.log("    見出し:", result.heads);
   console.log("    対象ファイル:", result.names);
-  console.log("    総合判定バッジ:", result.badges);
+  console.log("    総合判定バッジ:", result.badges, result.badgeClasses);
   console.log("    DLファイル名:", result.dls);
   console.log("    詳細チェック行数:", result.detailRows);
+  console.log("    色分けセル数:", result.coloredCells);
 
   await browser.close();
   server.close();
 
   const ok = result.heads.length === 2 && result.badges.length === 2 &&
-             result.dls.length === 2 && result.dls.every(Boolean) && result.detailRows > 20;
+             result.dls.length === 2 && result.dls.every(Boolean) && result.detailRows > 20 &&
+             // 総合判定バッジは ok/ng のいずれかが必ず付与される
+             result.badgeClasses.every(c => /\b(ok|ng)\b/.test(c)) &&
+             // classify が判定値を色付けしている（語彙ズレで全無色になる退行を検出）
+             result.coloredCells > 0;
   console.log(ok ? "\n✅ 実ブラウザE2E: 成功" : "\n❌ 実ブラウザE2E: 期待に未達");
   process.exit(ok ? 0 : 1);
 }
