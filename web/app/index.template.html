@@ -71,6 +71,8 @@
   .result { margin-top: 30px; }
   .result h2 { font-size: 17px; font-weight: 800; margin: 30px 0 14px; }
   .warnbox { background:#fff8c5; border:1px solid #f1d96a; border-radius:12px; padding:11px 14px; font-size:13px; margin:10px 0; }
+  .vernotice { background:#fff0ec; border:1px solid #f0a594; border-radius:12px; padding:12px 15px; font-size:13.5px; margin:12px 0 4px; color:#7a2d1c; line-height:1.65; }
+  .vernotice b { color: var(--ng); }
   .filehead { display:flex; align-items:center; gap:12px; flex-wrap:wrap; background:#fff; border-radius:14px;
               padding:12px 16px; margin-bottom:8px; box-shadow:0 10px 22px -18px rgba(40,30,50,.55); }
   .filehead .name { font-weight: 600; font-size: 14px; }
@@ -476,6 +478,66 @@ function classify(v) {
   return "";
 }
 
+// ---- 様式の版に関する注意（A=公式判定の前面化／B=要確認率の汎用注意）----
+// 思想：殻は様式知識を持たない。Aは「公式ツール自身が出した第2回判定」を拾って強調するだけ、
+// Bは判定語彙の比率を見るだけで、第1回/第2回の見分けはしない（断定しない文言にする）。
+const ROUND_RE = /第\s*[2２]\s*回|[2２]回目|second[-\s]?round|2nd[-\s]?round/i;
+function versionNotice(res) {
+  const [summary, ...details] = res.sheets || [];
+  const flaggedFiles = new Set();
+  let officialFlag = false;
+  // A-1: サマリーの「第2回公募書類を使用しているか」列が要確認か
+  if (summary && summary.rows && summary.rows.length) {
+    const [h, ...rows] = summary.rows;
+    const cName = findCol(h, ["ファイル名", "File Name"]);
+    h.forEach((hn, i) => {
+      if (!ROUND_RE.test(String(hn))) return;
+      rows.forEach(r => {
+        if (classify(r[i]) === "s-ng") {
+          officialFlag = true;
+          if (cName >= 0 && String(r[cName]).trim()) flaggedFiles.add(String(r[cName]).trim());
+        }
+      });
+    });
+  }
+  // A-2: 詳細の「項目」が第2回判定の行で要確認か／同時にB用の判定比率を集計
+  let ng = 0, problem = 0, judged = 0;
+  details.forEach(sh => {
+    const [h, ...rows] = sh.rows || [[]];
+    const cItem = findCol(h, ["項目", "Item"]);
+    const cJudge = findCol(h, ["判定", "Result"]);
+    const cFile = findCol(h, ["ファイル名", "File Name"]);
+    rows.forEach(r => {
+      const cls = cJudge >= 0 ? classify(r[cJudge]) : "";
+      if (cls) judged++;
+      if (cls === "s-ng") ng++;
+      if (cls === "s-ng" || cls === "s-warn") problem++;
+      if (cItem >= 0 && ROUND_RE.test(String(r[cItem])) && cls === "s-ng") {
+        officialFlag = true;
+        if (cFile >= 0 && String(r[cFile]).trim()) flaggedFiles.add(String(r[cFile]).trim());
+      }
+    });
+  });
+  // A: 公式ツールが「第2回書類か要確認」と出している → そのまま前面化
+  if (officialFlag) {
+    const files = [...flaggedFiles];
+    const flist = files.length ? `（該当：${files.map(escapeHtml).join("、")}）` : "";
+    return `<b>⚠️ 第1回様式の可能性があります。</b> 文科省ツールが「第2回公募書類を使用しているか」を`
+      + `<b>要確認</b>と判定しました${flist}。お手元の書類が<b>第2回公募用の最新様式</b>か、いま一度ご確認ください。`
+      + `第1回の様式のままだと項目の位置がずれ、多数のエラーになります。`;
+  }
+  // B: 版チェックの無い様式1向けの保険。閾値は高め（記入途中の正規様式で過剰に出さない）。
+  // 様式1で旧様式を入れると、入力済みセルもズレて読まれ「要確認＋未記入」が大半を占める。
+  // 致命的な要確認(ng)がまとまってあり、かつ全体の大半が要確認/未記入のときだけ出す。
+  const MIN_JUDGED = 15, MIN_NG = 8, HIGH_RATIO = 0.7;
+  if (judged >= MIN_JUDGED && ng >= MIN_NG && problem / judged >= HIGH_RATIO) {
+    return `<b>⚠️ 多くの項目が「要確認」「未記入」になっています。</b> 記入漏れの可能性のほか、`
+      + `書類が<b>第2回公募用の様式</b>か、また読み込んだチェックツール(.py)と様式の<b>組み合わせ</b>が`
+      + `正しいかをご確認ください。古い様式や旧版ツールでは、項目の位置がずれて全項目がエラーになることがあります。`;
+  }
+  return null;
+}
+
 function renderResult(heading, res) {
   const wrap = document.createElement("div");
   const h = document.createElement("h2"); h.textContent = heading; wrap.appendChild(h);
@@ -483,6 +545,11 @@ function renderResult(heading, res) {
   dl.className = "dl"; dl.textContent = "📥 結果Excelをダウンロード"; dl.download = res.filename;
   dl.href = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + res.b64;
   wrap.appendChild(dl);
+  const notice = versionNotice(res);
+  if (notice) {
+    const nb = document.createElement("div"); nb.className = "vernotice"; nb.innerHTML = notice;
+    wrap.appendChild(nb);
+  }
   const [summary, ...details] = res.sheets;
   if (summary) wrap.appendChild(renderSummary(summary));
   details.forEach(sh => wrap.appendChild(renderDetail(sh)));
